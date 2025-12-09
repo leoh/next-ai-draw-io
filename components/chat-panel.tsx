@@ -338,7 +338,17 @@ export default function ChatPanel({
         }),
         async onToolCall({ toolCall }) {
             if (toolCall.toolName === "display_diagram") {
-                const { xml } = toolCall.input as { xml: string }
+                let { xml } = toolCall.input as { xml: string }
+
+                // Auto-fix: Remove XML comments (DeepSeek models sometimes add them despite warnings)
+                const originalXml = xml
+                xml = xml.replace(/<!--[\s\S]*?-->/g, "")
+
+                if (originalXml !== xml) {
+                    console.warn(
+                        "[display_diagram] Auto-removed XML comments from generated XML",
+                    )
+                }
 
                 // loadDiagram validates and returns error if invalid
                 const validationError = onDisplayChart(xml)

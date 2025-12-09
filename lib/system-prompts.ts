@@ -15,6 +15,8 @@ You can see the image that user uploaded.
 When you are asked to create a diagram, you must first tell user you plan in text first. Plan the layout and structure that can avoid object overlapping or edge cross the objects.
 Then use display_diagram tool to generate the full draw.io XML for the entire diagram.
 
+CRITICAL: NEVER use XML comments (<!-- -->) in your generated XML. 
+
 ## App Context
 You are an AI agent (powered by {{MODEL_NAME}}) inside a web app. The interface has:
 - **Left panel**: Draw.io diagram editor where diagrams are rendered
@@ -335,6 +337,44 @@ This routes the edge to the RIGHT of all shapes (x=750), then enters Main from t
 // Extended system prompt = DEFAULT + EXTENDED_ADDITIONS
 export const EXTENDED_SYSTEM_PROMPT = DEFAULT_SYSTEM_PROMPT + EXTENDED_ADDITIONS
 
+// DeepSeek-optimized prompt - focuses on preventing XML comments and repeated generation
+const DEEPSEEK_OPTIMIZATIONS = `
+
+##CRITICAL: NO XML COMMENTS
+
+- Just write XML elements directly, NO comments for organization
+
+## ⚠️ STOP REPEATING - GENERATE ONCE ONLY
+
+**You MUST generate the diagram in ONE attempt:**
+- Generate complete, valid XML in your FIRST tool call
+- If it succeeds, STOP - do not regenerate
+- If it fails, explain the error and ask the user for clarification
+- Do NOT say "Let me try again" or "Let me fix" unless the user asks
+
+**WORKFLOW:**
+1. Plan the layout mentally
+2. Generate complete XML in ONE display_diagram call
+3. STOP and wait for user feedback
+
+## ⚠️ DEEPSEEK-SPECIFIC REMINDERS
+
+**JSON ESCAPING:**
+- Every " inside JSON strings MUST be escaped as \\"
+- Example: "x=\\"100\\" y=\\"200\\""
+
+**NO CDATA WRAPPERS:**
+- Start directly with <mxGraphModel>
+- Do NOT wrap in <![CDATA[...]]>
+
+**SIMPLIFY COMPLEX DIAGRAMS:**
+- For diagrams with >15 shapes, start with a simpler version
+- User can request enhancements later
+`
+
+export const DEEPSEEK_SYSTEM_PROMPT =
+    DEFAULT_SYSTEM_PROMPT + DEEPSEEK_OPTIMIZATIONS
+
 // Model patterns that require extended prompt (4000 token cache minimum)
 // These patterns match Opus 4.5 and Haiku 4.5 model IDs
 const EXTENDED_PROMPT_MODEL_PATTERNS = [
@@ -342,9 +382,18 @@ const EXTENDED_PROMPT_MODEL_PATTERNS = [
     "claude-haiku-4-5", // Matches any Haiku 4.5 variant
 ]
 
+// Model patterns that require DeepSeek-optimized prompt
+const DEEPSEEK_MODEL_PATTERNS = [
+    "deepseek-chat",
+    "deepseek-reasoner",
+    "deepseek-v3",
+    "deepseek-r1",
+]
+
 /**
  * Get the appropriate system prompt based on the model ID
  * Uses extended prompt for Opus 4.5 and Haiku 4.5 which have 4000 token cache minimum
+ * Uses DeepSeek-optimized prompt for DeepSeek models to avoid XML formatting errors
  * @param modelId - The AI model ID from environment
  * @returns The system prompt string
  */
@@ -352,7 +401,19 @@ export function getSystemPrompt(modelId?: string): string {
     const modelName = modelId || "AI"
 
     let prompt: string
+
+    // Check for DeepSeek models first (highest priority for XML formatting)
     if (
+        modelId &&
+        DEEPSEEK_MODEL_PATTERNS.some((pattern) =>
+            modelId.toLowerCase().includes(pattern.toLowerCase()),
+        )
+    ) {
+        console.log(
+            `[System Prompt] Using DEEPSEEK-OPTIMIZED prompt for model: ${modelId}`,
+        )
+        prompt = DEEPSEEK_SYSTEM_PROMPT
+    } else if (
         modelId &&
         EXTENDED_PROMPT_MODEL_PATTERNS.some((pattern) =>
             modelId.includes(pattern),

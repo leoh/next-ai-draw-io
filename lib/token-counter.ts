@@ -6,7 +6,11 @@
  */
 
 import { encodingForModel } from "js-tiktoken"
-import { DEFAULT_SYSTEM_PROMPT, EXTENDED_SYSTEM_PROMPT } from "./system-prompts"
+import {
+    DEEPSEEK_SYSTEM_PROMPT,
+    DEFAULT_SYSTEM_PROMPT,
+    EXTENDED_SYSTEM_PROMPT,
+} from "./system-prompts"
 
 const encoder = encodingForModel("gpt-4o")
 
@@ -22,18 +26,23 @@ export function countTextTokens(text: string): number {
 /**
  * Get token counts for the system prompts
  * Useful for debugging and optimizing prompt sizes
- * @returns Object with token counts for default and extended prompts
+ * @returns Object with token counts for default, extended, and deepseek prompts
  */
 export function getSystemPromptTokenCounts(): {
     default: number
     extended: number
+    deepseek: number
     additions: number
+    deepseekAdditions: number
 } {
     const defaultTokens = countTextTokens(DEFAULT_SYSTEM_PROMPT)
     const extendedTokens = countTextTokens(EXTENDED_SYSTEM_PROMPT)
+    const deepseekTokens = countTextTokens(DEEPSEEK_SYSTEM_PROMPT)
     return {
         default: defaultTokens,
         extended: extendedTokens,
+        deepseek: deepseekTokens,
         additions: extendedTokens - defaultTokens,
+        deepseekAdditions: deepseekTokens - defaultTokens,
     }
 }

@@ -354,6 +354,8 @@ ${lastMessageText}
             display_diagram: {
                 description: `Display a diagram on draw.io. Pass the XML content inside <root> tags.
 
+CRITICAL: NEVER include XML comments (<!-- -->) in your XML. 
+
 VALIDATION RULES (XML will be rejected if violated):
 1. All mxCell elements must be DIRECT children of <root> - never nested
 2. Every mxCell needs a unique id
