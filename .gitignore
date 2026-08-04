@@ -2,6 +2,8 @@
 
 # dependencies
 /node_modules
+packages/*/node_modules
+packages/*/dist
 /.pnp
 .pnp.*
 .yarn/*
@@ -12,6 +14,8 @@
 
 # testing
 /coverage
+/playwright-report/
+/test-results/
 
 # next.js
 /.next/
@@ -40,9 +44,38 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 push-via-ec2.sh
-.claude/settings.local.json
+.claude/
 .playwright-mcp/
 # Cloudflare
 .dev.vars
 .open-next/
 .wrangler/
+.env*.local
+
+# Electron
+/dist-electron/
+/release/
+/electron-standalone/
+# Draw.io static files (downloaded during CI build)
+public/drawio/
+*.dmg
+*.exe
+*.AppImage
+*.deb
+*.rpm
+*.snap
+
+CLAUDE.md
+.spec-workflow
+
+# edgeone
+.edgeone
+opencode.json
+ai-models.json
+
+# local backups
+*.bak
+.gstack/
+
+# admin panel settings (contains secrets)
+data/
